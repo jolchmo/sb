@@ -9,18 +9,38 @@ sb是一个很好用的代码片段。按以下指南完成设置后，当你修
 # --- Copy Paste this into your ~/.bashrc ---
 
 check_python_env() {
+    local curr_dir="$PWD"
     # 优先检测本地是否有 .venv 文件夹
-    if [[ -f "./.venv/bin/activate" ]]; then
-        echo -e "\033[32m[+] Detect .venv, activating...\033[0m"
-        source ./.venv/bin/activate
+    if [[ -f "$curr_dir/.venv/bin/activate" ]]; then
+        echo -e "\033[32m[+] Detect .venv at $curr_dir, activating...\033[0m"
+        source "$curr_dir/.venv/bin/activate"
+        return
+    # 2. 检测 Conda environment.yml (自动激活同名环境或按需处理)
+    elif [[ -f "$curr_dir/environment.yml" ]]; then
+        local env_name=$(grep "name:" "$curr_dir/environment.yml" | cut -d' ' -f2)
+        if [ ! -z "$env_name" ]; then
+            echo -e "\033[36m[+] Detect Conda environment.yml, activating [$env_name]...\033[0m"
+            conda activate "$env_name" 2>/dev/null || echo -e "\033[31m[!] Conda activate failed.\033[0m"
+        fi
+        return
     fi
 }
 
 sb() {
-    # 1. 重新读取 bash 配置 (刷新环境变量/别名)
-    source ~/.bashrc
-    
-    # 2. 检查并按需自动激活当前目录的 Python 虚拟环境
+# 防止死循环：设置一个临时环境变量标记
+    if [[ -z "$SB_RELOADING" ]]; then
+        export SB_RELOADING=1
+        echo -e "\033[34m[System] Reloading config...\033[0m"
+        
+        # 重新加载配置
+        if [ -f ~/.bashrc ]; then source ~/.bashrc; fi
+        if [ -f ~/.zshrc ]; then source ~/.zshrc; fi
+        
+        # 清除标记
+        unset SB_RELOADING
+    fi
+
+    # 检查并激活环境
     check_python_env
 }
 ```
@@ -76,16 +96,28 @@ function sb {
     # 3. 加载虚拟环境(如有)
     $foundEnv = $false
     # 优先检测: .venv/Scripts/activate.ps1 (Windows常见)
-    if (Test-Path ".\.venv\Scripts\Activate.ps1") {
-        Write-Host " [Venv] Activating (Scripts mode)..." -ForegroundColor Green
-        & ".\.venv\Scripts\Activate.ps1"
+
+    # --- 优先检测 .venv (原生虚拟环境) ---
+    $venvPath = Join-Path $curr.FullName ".venv\Scripts\Activate.ps1"
+    if (Test-Path $venvPath) {
+        Write-Host " [Venv] Activating .venv at $($curr.FullName)..." -ForegroundColor Green
+        & $venvPath
         $foundEnv = $true
+        break
     }
-    # 备选检测: .venv/bin/activate.ps1 (Unix/Legacy)
-    elseif (Test-Path ".\.venv\bin\Activate.ps1"){
-        Write-Host " [Venv] Activating (Bin mode)..." -ForegroundColor Green
-        & ".\.venv\bin\Activate.ps1"
-        $foundEnv = $true
+
+    # --- 其次检测 Conda (environment.yml) ---
+    $condaYaml = Join-Path $curr.FullName "environment.yml"
+    if (Test-Path $condaYaml) {
+        # 从 yaml 文件中解析 name 字段
+        $envContent = Get-Content $condaYaml | Select-String "name:\s*(.*)"
+        if ($envContent) {
+            $envName = $envContent.Matches.Groups[1].Value.Trim()
+            Write-Host " [Conda] Activating environment [$envName]..." -ForegroundColor Cyan
+            conda activate $envName
+            $foundEnv = $true
+            break
+        }
     }
     if (-not $foundEnv) {
         Write-Warning " [Warn] No virtual environment (.venv) found in current directory."
