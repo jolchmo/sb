@@ -13,8 +13,8 @@ check_python_env() {
     if [[ -f "./.venv/bin/activate" ]]; then
         echo -e "\033[32m[+] Detect .venv, activating...\033[0m"
         source ./.venv/bin/activate
-    # 针对包含特殊路径名 (如 piper_ws) 的兼容逻辑
-    elif [[ "$PWD" == *"piper_ws"* ]] && [[ -f "./.venv/bin/activate" ]]; then
+    # 如果当前路径下有./.venv/bin/activate，那么自动激活python虚拟环境
+    elif  [[ -f "./.venv/bin/activate" ]]; then
         source ./.venv/bin/activate
     fi
 }
