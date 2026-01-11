@@ -61,33 +61,13 @@ $StdPathLocations = @(
     #...
 )
 
-$SetUserEnvVars = {
-    Write-Host " [Env] Setting global variables..." -ForegroundColor DarkGray
-    # --- General ---
-    $env:EDITOR = "code"            
-    $env:LANG   = "en_US.UTF-8"
-    # --- Java Options (Example) ---
-    # 下方路径务必确保和 $StdPathLocations 里的 JDK 版本对应
-    $env:JAVA_HOME = "C:\Program Files\Microsoft\jdk-21.0.8.9-hotspot\"
-    # --- Aliases (常用别名) ---
-    if (Get-Alias grep -ErrorAction SilentlyContinue) { Remove-Item alias:\grep }
-    Set-Alias grep findstr
-    Set-Alias ll ls 
-    Set-Alias n vim
-    Set-Alias which Get-Command
-    Set-Alias time Get-Date
-
-}
 # 定义函数别名
 function sb {
     Write-Host " [System] Reloading Profile..." -ForegroundColor Cyan
 
-    Write-Host "`n====== REFRESHING ENVIRONMENT ======" -ForegroundColor DarkCyan
-    # 1. 执行变量重设 Logic
-    # 按需解开下方的注释
-    #& $SetUserEnvVars
 
-    Write-Host " [PATH] Environment Variables Cleaned & Reset." -ForegroundColor DarkCyan
+
+    Write-Host " [PATH] Environment PATH Cleaned & Reset." -ForegroundColor DarkCyan
     # 2. 强制设定 System PATH (这就相当于硬生生 source 了一遍干净的 path 变量)
     # 按需解开下方的注释
     #$env:Path = $StdPathLocations -join ";"
