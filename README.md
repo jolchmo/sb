@@ -13,9 +13,6 @@ check_python_env() {
     if [[ -f "./.venv/bin/activate" ]]; then
         echo -e "\033[32m[+] Detect .venv, activating...\033[0m"
         source ./.venv/bin/activate
-    # 如果当前路径下有./.venv/bin/activate，那么自动激活python虚拟环境
-    elif  [[ -f "./.venv/bin/activate" ]]; then
-        source ./.venv/bin/activate
     fi
 }
 
@@ -41,21 +38,7 @@ $StdPathLocations = @(
     "C:\WINDOWS",
     "C:\WINDOWS\System32\Wbem",
     "C:\WINDOWS\System32\OpenSSH",
-    # ---- Build Tools & Compilers (VS, CMake, Qt) ----
-    "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.42.34433\bin\Hostx64\x64",
-    "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin",
-    "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja",
-    "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\",
-    "C:\Qt\6.7.3\msvc2022_64\bin",
-    # ---- Common Platforms (Node, Py, Dotnet) ----
-    "C:\Program Files\nodejs\",
-    "C:\Program Files\dotnet\",
-    "C:\Users\<USER>\AppData\Local\Programs\Python\Python311",
-    "C:\Users\<USER>\AppData\Local\Programs\Python\Python311\Scripts",
-    "C:\Users\<USER>\AppData\Local\Programs\Python\Python38",
-    "C:\Users\<USER>\AppData\Local\Programs\Python\Python38\Scripts",
-    "C:\Program Files\Eclipse Adoptium\jdk-17.0.16.8-hotspot\bin",
-    "C:\Program Files\Microsoft\jdk-21.0.8.9-hotspot\bin",
+    #...
 )
 
 $SetUserEnvVars = {
@@ -92,8 +75,14 @@ function sb {
 
     # 3. 加载虚拟环境(如有)
     $foundEnv = $false
-    # 检测: .venv/bin/activate.ps1 (Unix/Legacy)
-    if (Test-Path ".\.venv\bin\Activate.ps1") {
+    # 优先检测: .venv/Scripts/activate.ps1 (Windows常见)
+    if (Test-Path ".\.venv\Scripts\Activate.ps1") {
+        Write-Host " [Venv] Activating (Scripts mode)..." -ForegroundColor Green
+        & ".\.venv\Scripts\Activate.ps1"
+        $foundEnv = $true
+    }
+    # 备选检测: .venv/bin/activate.ps1 (Unix/Legacy)
+    elseif (Test-Path ".\.venv\bin\Activate.ps1"){
         Write-Host " [Venv] Activating (Bin mode)..." -ForegroundColor Green
         & ".\.venv\bin\Activate.ps1"
         $foundEnv = $true
