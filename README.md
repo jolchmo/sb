@@ -96,7 +96,7 @@ function sb {
     # 3. 加载虚拟环境(如有)
     $foundEnv = $false
     # 优先检测: .venv/Scripts/activate.ps1 (Windows常见)
-
+    $curr = Get-Item .
     # --- 优先检测 .venv (原生虚拟环境) ---
     $venvPath = Join-Path $curr.FullName ".venv\Scripts\Activate.ps1"
     if (Test-Path $venvPath) {
